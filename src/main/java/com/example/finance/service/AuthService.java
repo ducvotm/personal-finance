@@ -40,71 +40,59 @@ public class AuthService {
             throw new BadRequestException("Email is already in use");
         }
 
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role("USER")
-                .build();
+        User user = User.builder().username(request.getUsername()).email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword())).role("USER").build();
 
         User savedUser = userRepository.save(user);
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         String accessToken = tokenProvider.generateToken(authentication);
         String refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
 
         log.info("✅ AUTH SERVICE: User {} registered successfully", savedUser.getUsername());
 
-        return AuthResponse.of(accessToken, refreshToken, savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+        return AuthResponse.of(accessToken, refreshToken, savedUser.getId(), savedUser.getUsername(),
+                savedUser.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         String accessToken = tokenProvider.generateToken(authentication);
-        
+
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         String refreshToken = refreshTokenService.createRefreshToken(userPrincipal.getId());
 
         log.info("✅ AUTH SERVICE: User {} logged in successfully", userPrincipal.getUsername());
 
-        return AuthResponse.of(accessToken, refreshToken, userPrincipal.getId(), userPrincipal.getUsername(), userPrincipal.getEmail());
+        return AuthResponse.of(accessToken, refreshToken, userPrincipal.getId(), userPrincipal.getUsername(),
+                userPrincipal.getEmail());
     }
 
     public AuthResponse refreshToken(String refreshToken, Long userId) {
         log.info("🔄 AUTH SERVICE: Refreshing token for user ID: {}", userId);
-        
+
         if (!refreshTokenService.validateRefreshToken(userId, refreshToken)) {
             log.warn("❌ AUTH SERVICE: Invalid refresh token for user ID: {}", userId);
             throw new BadRequestException("Invalid refresh token");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("❌ AUTH SERVICE: User not found with ID: {}", userId);
-                    return new BadRequestException("User not found");
-                });
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            log.error("❌ AUTH SERVICE: User not found with ID: {}", userId);
+            return new BadRequestException("User not found");
+        });
 
         UserPrincipal userPrincipal = UserPrincipal.create(user);
-        
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-            userPrincipal, null, userPrincipal.getAuthorities()
-        );
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userPrincipal, null,
+                userPrincipal.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String newAccessToken = tokenProvider.generateToken(authentication);

@@ -21,30 +21,30 @@ public class RefreshTokenService {
     public String createRefreshToken(Long userId) {
         String token = UUID.randomUUID().toString();
         String key = REFRESH_TOKEN_PREFIX + userId;
-        
+
         log.info("🔄 REFRESH TOKEN: Creating token for user ID: {}", userId);
-        
+
         redisTemplate.opsForValue().set(key, token, Duration.ofDays(REFRESH_TOKEN_TTL_DAYS));
-        
+
         log.info("✅ REFRESH TOKEN: Token created and stored in Redis for user: {}", userId);
-        
+
         return token;
     }
 
     public boolean validateRefreshToken(Long userId, String refreshToken) {
         String key = REFRESH_TOKEN_PREFIX + userId;
         String storedToken = (String) redisTemplate.opsForValue().get(key);
-        
+
         log.debug("🔍 REFRESH TOKEN: Validating token for user ID: {}", userId);
-        
+
         boolean isValid = refreshToken.equals(storedToken);
-        
+
         if (isValid) {
             log.info("✅ REFRESH TOKEN: Validation successful for user: {}", userId);
         } else {
             log.warn("❌ REFRESH TOKEN: Validation failed for user: {}", userId);
         }
-        
+
         return isValid;
     }
 
