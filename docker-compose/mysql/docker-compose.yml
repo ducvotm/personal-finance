@@ -1,19 +1,28 @@
-version: '3.3'
-
 services:
   mysql-db:
     image: mysql:8.0.33
+    container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: Admin@123
-#      MYSQL_DATABASE: auth
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: personal_finance
     ports:
-    - '3306:3306'
+      - "3306:3306"
     volumes:
-    - mysql-db:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
+      - ./db-dumps:/docker-entrypoint-initdb.d
     restart: on-failure
+    networks:
+      - finance-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pAdmin@123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  finance-network:
+    name: finance-network
+    external: true
 
 volumes:
-  mysql-db:
-    driver: local
+  mysql-data:

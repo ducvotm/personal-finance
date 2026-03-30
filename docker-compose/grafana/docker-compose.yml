@@ -1,18 +1,23 @@
-version: '3.3'
-
 services:
   grafana:
-    image: grafana/grafana:10.0.3-ubuntu
+    image: grafana/grafana:10.4.2-ubuntu
+    container_name: grafana
     ports:
-    - '3000:3000'
+      - "3000:3000"
     volumes:
-    - grafana:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - finance-network
+
+networks:
+  finance-network:
+    name: finance-network
+    external: true
 
 volumes:
-  grafana:
-    driver: local
+  grafana-data:

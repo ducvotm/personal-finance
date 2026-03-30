@@ -1,12 +1,22 @@
-version: '3.3'
-
 services:
   prometheus:
     image: prom/prometheus:v2.46.0
+    container_name: prometheus
     ports:
-    - '9090:9090'
+      - "9090:9090"
     volumes:
-    - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - finance-network
+
+networks:
+  finance-network:
+    name: finance-network
+    external: true
+
+volumes:
+  prometheus-data:
