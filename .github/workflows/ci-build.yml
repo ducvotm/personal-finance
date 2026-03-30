@@ -55,7 +55,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:${{ env.MYSQL_VERSION }}
+        image: mysql:8.0.33
         env:
           MYSQL_ROOT_PASSWORD: Admin@123
           MYSQL_DATABASE: personal_finance
@@ -64,7 +64,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
 
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        image: redis:7.2.1-alpine3.18
         env:
           REDIS_PASSWORD: Redis@123
         ports:
