@@ -1,0 +1,113 @@
+services:
+  # ============================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================
+  
+  mysql-db:
+    image: mysql:8.0.33
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin@123
+      MYSQL_DATABASE: personal_finance
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker-compose/mysql/db-dumps:/docker-entrypoint-initdb.d
+    restart: on-failure
+    networks:
+      - finance-network
+
+  redis:
+    image: redis:7.2.1-alpine3.18
+    container_name: redis
+    environment:
+      REDIS_PASSWORD: Redis@123
+    ports:
+      - "6379:6379"
+    restart: on-failure
+    command: redis-server --requirepass ${REDIS_PASSWORD:-Redis@123}
+    networks:
+      - finance-network
+
+  # ============================================
+  # MONITORING STACK
+  # ============================================
+
+  prometheus:
+    image: prom/prometheus:v2.46.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker-compose/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - finance-network
+
+  grafana:
+    image: grafana/grafana:10.4.2-ubuntu
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - finance-network
+    depends_on:
+      - prometheus
+
+  # ============================================
+  # APPLICATION
+  # ============================================
+
+  personal-finance:
+    image: personal-finance:latest
+    container_name: personal-finance
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/personal_finance?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Admin@123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: Redis@123
+      SPRING_DATA_REDIS_TIMEOUT: 60000
+      JWT_SECRET: PersonalFinanceSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong2024
+      JWT_ACCESS_EXPIRATION: 14400000
+      JWT_REFRESH_EXPIRATION: 604800000
+      JWT_ROLE_DEFAULT: USER
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      MANAGEMENT_METRICS_TAGS_APPLICATION: spring-boot
+      SPRING_PROMETHEUS_METRICS_EXPORT_ENABLED: 'true'
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    networks:
+      - finance-network
+    depends_on:
+      - mysql-db
+      - redis
+      - prometheus
+
+networks:
+  finance-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  prometheus-data:
+  grafana-data:
