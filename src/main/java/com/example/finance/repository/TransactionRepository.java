@@ -3,6 +3,7 @@ package com.example.finance.repository;
 import com.example.finance.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,14 +16,19 @@ import java.util.Optional;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
+    @EntityGraph(attributePaths = {"account", "category"})
     Page<Transaction> findByUserId(Long userId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     Optional<Transaction> findByIdAndUserId(Long id, Long userId);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     List<Transaction> findByAccountId(Long accountId);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     List<Transaction> findByCategoryId(Long categoryId);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.transactionDate BETWEEN :startDate AND :endDate")
     List<Transaction> findByUserIdAndDateRange(@Param("userId")
     Long userId, @Param("startDate")
@@ -36,6 +42,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     LocalDate startDate, @Param("endDate")
     LocalDate endDate);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.account.id = :accountId AND t.transactionDate BETWEEN :startDate AND :endDate")
     List<Transaction> findByUserIdAndAccountIdAndDateRange(@Param("userId")
     Long userId, @Param("accountId")
