@@ -1,4 +1,23 @@
 services:
+  mysql-db:
+    image: mysql:8.0.33
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin@123
+      MYSQL_DATABASE: personal_finance
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: on-failure
+    networks:
+      - finance-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   personal-finance:
     image: personal-finance:latest
     container_name: personal-finance
@@ -10,19 +29,10 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: Admin@123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: Redis@123
-      SPRING_DATA_REDIS_TIMEOUT: 60000
       JWT_SECRET: PersonalFinanceSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong2024
       JWT_ACCESS_EXPIRATION: 14400000
       JWT_REFRESH_EXPIRATION: 604800000
       JWT_ROLE_DEFAULT: USER
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: '*'
-      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
-      MANAGEMENT_METRICS_TAGS_APPLICATION: spring-boot
-      SPRING_PROMETHEUS_METRICS_EXPORT_ENABLED: 'true'
-      SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
       - "8080:8080"
     restart: on-failure
@@ -31,10 +41,24 @@ services:
     depends_on:
       mysql-db:
         condition: service_healthy
-      redis:
-        condition: service_started
+
+  frontend:
+    image: personal-finance-frontend:latest
+    container_name: personal-finance-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:80"
+    networks:
+      - finance-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   finance-network:
-    name: finance-network
-    external: true
+    driver: bridge
+
+volumes:
+  mysql-data:

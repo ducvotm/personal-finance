@@ -15,7 +15,6 @@ import com.example.finance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -31,7 +30,6 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     public TransactionResponse createTransaction(Long userId, TransactionRequest request) {
@@ -54,8 +52,6 @@ public class TransactionService {
         updateAccountBalance(account, request.getAmount(), request.getType());
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-
-        redisTemplate.delete("totalBalance::total_" + userId);
 
         return mapToResponse(savedTransaction);
     }
@@ -105,8 +101,6 @@ public class TransactionService {
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
-        redisTemplate.delete("totalBalance::total_" + userId);
-
         return mapToResponse(updatedTransaction);
     }
 
@@ -119,8 +113,6 @@ public class TransactionService {
         accountRepository.save(transaction.getAccount());
 
         transactionRepository.delete(transaction);
-
-        redisTemplate.delete("totalBalance::total_" + userId);
     }
 
     @Transactional(readOnly = true)

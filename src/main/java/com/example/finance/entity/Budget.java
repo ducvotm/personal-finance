@@ -4,37 +4,38 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "accounts", indexes = {@Index(name = "idx_account_user_id", columnList = "user_id"),
-        @Index(name = "idx_account_user_type", columnList = "user_id, type")})
+@Table(name = "budgets", indexes = {@Index(name = "idx_budget_user_category", columnList = "user_id, category_id"),
+        @Index(name = "idx_budget_user_period", columnList = "user_id, period_start, period_end")})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Account {
+public class Budget {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String type;
-
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal balance;
+    private BigDecimal amount;
 
-    @Column(name = "account_number")
-    private String accountNumber;
+    @Column(name = "period_start", nullable = false)
+    private LocalDate periodStart;
 
-    private String currency;
+    @Column(name = "period_end", nullable = false)
+    private LocalDate periodEnd;
 
-    private String description;
+    @Column(name = "period_type", nullable = false)
+    private String periodType;
+
+    @Column(name = "spent_amount", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal spentAmount = BigDecimal.ZERO;
 
     @Column(name = "is_active")
     @Builder.Default
@@ -47,6 +48,11 @@ public class Account {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
@@ -55,9 +61,6 @@ public class Account {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (currency == null) {
-            currency = "USD";
-        }
     }
 
     @PreUpdate

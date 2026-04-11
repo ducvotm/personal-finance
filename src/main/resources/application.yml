@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: personal-finance
+    name: budget-mvp
 
   datasource:
     url: jdbc:mysql://localhost:3306/personal_finance?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -20,12 +20,6 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 60000
-
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -41,20 +35,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info
   endpoint:
     health:
-      show-details: always
-  metrics:
-    tags:
-      application: spring-boot
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-
-sentry:
-  dsn: ${SENTRY_DSN:}
+      show-details: when_authorized
 
 logging:
   level:

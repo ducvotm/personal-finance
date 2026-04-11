@@ -42,6 +42,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     LocalDate startDate, @Param("endDate")
     LocalDate endDate);
 
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.category.id = :categoryId AND t.type = :type AND t.transactionDate BETWEEN :startDate AND :endDate")
+    BigDecimal getTotalByUserIdAndCategoryIdAndTypeAndDateRange(@Param("userId")
+    Long userId, @Param("categoryId")
+    Long categoryId, @Param("type")
+    String type, @Param("startDate")
+    LocalDate startDate, @Param("endDate")
+    LocalDate endDate);
+
     @EntityGraph(attributePaths = {"account", "category"})
     @Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.account.id = :accountId AND t.transactionDate BETWEEN :startDate AND :endDate")
     List<Transaction> findByUserIdAndAccountIdAndDateRange(@Param("userId")

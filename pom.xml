@@ -15,7 +15,7 @@
     <artifactId>personal-finance</artifactId>
     <version>1.0.0</version>
     <name>personal-finance</name>
-    <description>Personal Finance REST API</description>
+    <description>Minimal budgeting REST API (Spring Boot, JPA, JWT)</description>
 
     <properties>
         <java.version>17</java.version>
@@ -37,11 +37,6 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
@@ -53,17 +48,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.sentry</groupId>
-            <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
-            <version>6.30.0</version>
         </dependency>
 
         <dependency>

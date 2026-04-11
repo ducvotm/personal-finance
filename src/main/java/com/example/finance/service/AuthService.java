@@ -29,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final DefaultDataService defaultDataService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -44,6 +45,8 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword())).role("USER").build();
 
         User savedUser = userRepository.save(user);
+
+        defaultDataService.createDefaultData(savedUser);
 
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));

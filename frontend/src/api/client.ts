@@ -121,6 +121,31 @@ export interface Category {
   color: string;
 }
 
+export interface Budget {
+  id: number;
+  amount: number;
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+  spentAmount: number;
+  remainingAmount: number;
+  percentUsed: number;
+  isActive: boolean;
+  createdAt: string;
+  categoryId: number;
+  categoryName: string;
+  categoryIcon: string;
+  categoryColor: string;
+}
+
+export interface BudgetRequest {
+  amount: number;
+  periodStart: string;
+  periodEnd: string;
+  periodType: string;
+  categoryId: number;
+}
+
 export interface PagedResponse<T> {
   content: T[];
   totalElements: number;
@@ -165,6 +190,26 @@ export const categoryApi = {
   
   getByType: (type: 'INCOME' | 'EXPENSE') =>
     api.get<ApiResponse<Category[]>>('/categories', { params: { type } }),
+};
+
+export const budgetApi = {
+  getAll: () =>
+    api.get<ApiResponse<Budget[]>>('/budgets'),
+  
+  getById: (id: number) =>
+    api.get<ApiResponse<Budget>>(`/budgets/${id}`),
+  
+  getByDateRange: (startDate: string, endDate: string) =>
+    api.get<ApiResponse<Budget[]>>('/budgets/by-date', { params: { startDate, endDate } }),
+  
+  create: (data: BudgetRequest) =>
+    api.post<ApiResponse<Budget>>('/budgets', data),
+  
+  update: (id: number, data: BudgetRequest) =>
+    api.put<ApiResponse<Budget>>(`/budgets/${id}`, data),
+  
+  delete: (id: number) =>
+    api.delete<ApiResponse<void>>(`/budgets/${id}`),
 };
 
 export default api;

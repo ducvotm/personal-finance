@@ -59,8 +59,8 @@ export default function Register() {
       <Card maxW="md" w="full" mx={4}>
         <CardBody p={8}>
           <VStack spacing={4}>
-            <Heading size="lg">Sign Up</Heading>
-            <Text color="gray.600">Create your account</Text>
+            <Heading size="lg">Sign up</Heading>
+            <Text color="gray.600">Budget MVP — create an account</Text>
 
             <form onSubmit={handleSubmit} style={{ width: '100%' }}>
               <VStack spacing={4}>

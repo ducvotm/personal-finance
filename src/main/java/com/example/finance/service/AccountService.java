@@ -8,9 +8,6 @@ import com.example.finance.exception.ResourceNotFoundException;
 import com.example.finance.repository.AccountRepository;
 import com.example.finance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -19,14 +16,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "accounts")
 public class AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public AccountResponse createAccount(Long userId, AccountRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -41,7 +36,6 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "#userId + '_' + #accountId")
     public AccountResponse getAccountById(Long userId, Long accountId) {
         Account account = accountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", accountId));
@@ -49,13 +43,11 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "#userId")
     public List<AccountResponse> getAllAccounts(Long userId) {
         return accountRepository.findByUserId(userId).stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public AccountResponse updateAccount(Long userId, Long accountId, AccountRequest request) {
         Account account = accountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", accountId));
@@ -74,7 +66,6 @@ public class AccountService {
     }
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public void deleteAccount(Long userId, Long accountId) {
         Account account = accountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", accountId));
@@ -82,7 +73,6 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "totalBalance", key = "'total_' + #userId")
     public BigDecimal getTotalBalance(Long userId) {
         return accountRepository.getTotalBalanceByUserId(userId);
     }

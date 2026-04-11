@@ -1,11 +1,16 @@
 package com.example.finance.security;
 
+import com.example.finance.entity.RefreshToken;
+import com.example.finance.entity.User;
+import com.example.finance.exception.ResourceNotFoundException;
+import com.example.finance.repository.RefreshTokenRepository;
+import com.example.finance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -13,44 +18,41 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-    private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
     private static final long REFRESH_TOKEN_TTL_DAYS = 7;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
 
+    @Transactional
     public String createRefreshToken(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        log.info("REFRESH TOKEN: Creating token for user ID: {}", userId);
+
+        refreshTokenRepository.deleteByUser_Id(userId);
+
         String token = UUID.randomUUID().toString();
-        String key = REFRESH_TOKEN_PREFIX + userId;
+        RefreshToken entity = RefreshToken.builder().user(user).token(token)
+                .expiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_TTL_DAYS)).build();
+        refreshTokenRepository.save(entity);
 
-        log.info("🔄 REFRESH TOKEN: Creating token for user ID: {}", userId);
-
-        redisTemplate.opsForValue().set(key, token, Duration.ofDays(REFRESH_TOKEN_TTL_DAYS));
-
-        log.info("✅ REFRESH TOKEN: Token created and stored in Redis for user: {}", userId);
+        log.info("REFRESH TOKEN: Stored for user: {}", userId);
 
         return token;
     }
 
+    @Transactional(readOnly = true)
     public boolean validateRefreshToken(Long userId, String refreshToken) {
-        String key = REFRESH_TOKEN_PREFIX + userId;
-        String storedToken = (String) redisTemplate.opsForValue().get(key);
+        log.debug("REFRESH TOKEN: Validating for user ID: {}", userId);
 
-        log.debug("🔍 REFRESH TOKEN: Validating token for user ID: {}", userId);
-
-        boolean isValid = refreshToken.equals(storedToken);
-
-        if (isValid) {
-            log.info("✅ REFRESH TOKEN: Validation successful for user: {}", userId);
-        } else {
-            log.warn("❌ REFRESH TOKEN: Validation failed for user: {}", userId);
-        }
-
-        return isValid;
+        return refreshTokenRepository.findByUser_Id(userId).filter(rt -> rt.getToken().equals(refreshToken))
+                .filter(rt -> rt.getExpiresAt().isAfter(LocalDateTime.now())).isPresent();
     }
 
+    @Transactional
     public void deleteRefreshToken(Long userId) {
-        String key = REFRESH_TOKEN_PREFIX + userId;
-        redisTemplate.delete(key);
-        log.info("🗑️ REFRESH TOKEN: Deleted for user: {}", userId);
+        refreshTokenRepository.deleteByUser_Id(userId);
+        log.info("REFRESH TOKEN: Deleted for user: {}", userId);
     }
 }

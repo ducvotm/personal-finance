@@ -1,6 +1,7 @@
 package com.example.finance.exception;
 
-import io.sentry.Sentry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,15 +17,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        Sentry.captureMessage(ex.getMessage(), io.sentry.SentryLevel.INFO);
+        log.debug("Resource not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequestException(BadRequestException ex) {
-        Sentry.captureMessage(ex.getMessage(), io.sentry.SentryLevel.INFO);
+        log.debug("Bad request: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(ex.getMessage()));
     }
 
@@ -37,7 +40,7 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        Sentry.captureMessage("Validation failed: " + errors.toString(), io.sentry.SentryLevel.INFO);
+        log.debug("Validation failed: {}", errors);
         ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder().success(false)
                 .message("Validation failed").data(errors).timestamp(java.time.LocalDateTime.now()).build();
         return ResponseEntity.badRequest().body(response);
@@ -45,24 +48,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException ex) {
-        Sentry.captureMessage("Authentication failed: Bad credentials", io.sentry.SentryLevel.INFO);
+        log.debug("Authentication failed: bad credentials");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Invalid username or password"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
-        Sentry.captureMessage("Authentication failed: " + ex.getMessage(), io.sentry.SentryLevel.INFO);
+        log.debug("Authentication failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication failed: " + ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        Sentry.withScope(scope -> {
-            scope.setLevel(io.sentry.SentryLevel.ERROR);
-            scope.setExtra("exception_type", ex.getClass().getSimpleName());
-            Sentry.captureException(ex);
-        });
+        log.error("Unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred: " + ex.getMessage()));
     }

@@ -9,9 +9,6 @@ import com.example.finance.exception.ResourceNotFoundException;
 import com.example.finance.repository.CategoryRepository;
 import com.example.finance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -19,14 +16,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "categories")
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public CategoryResponse createCategory(Long userId, CategoryRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -43,7 +38,6 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "#userId + '_' + #categoryId")
     public CategoryResponse getCategoryById(Long userId, Long categoryId) {
         Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
@@ -51,20 +45,17 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "#userId")
     public List<CategoryResponse> getAllCategories(Long userId) {
         return categoryRepository.findByUserId(userId).stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(key = "#userId + '_' + #type")
     public List<CategoryResponse> getCategoriesByType(Long userId, String type) {
         return categoryRepository.findByUserIdAndType(userId, type).stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public CategoryResponse updateCategory(Long userId, Long categoryId, CategoryRequest request) {
         Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
@@ -84,7 +75,6 @@ public class CategoryService {
     }
 
     @Transactional
-    @CacheEvict(key = "#userId")
     public void deleteCategory(Long userId, Long categoryId) {
         Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));

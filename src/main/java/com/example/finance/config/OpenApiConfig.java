@@ -17,12 +17,10 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
 
-        return new OpenAPI()
-                .info(new Info().title("Personal Finance API").version("1.0.0")
-                        .description("REST API for personal finance management with JWT authentication. " +
-                                "Supports account management, category management, and transaction tracking.")
-                        .contact(new Contact().name("API Support").email("support@example.com"))
-                        .license(new License().name("MIT License").url("https://opensource.org/licenses/MIT")))
+        return new OpenAPI().info(new Info().title("Budget MVP API").version("1.0.0")
+                .description("REST API for a minimal budgeting app: JWT auth, category budgets, and expense logging.")
+                .contact(new Contact().name("API Support").email("support@example.com"))
+                .license(new License().name("MIT License").url("https://opensource.org/licenses/MIT")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components().addSecuritySchemes(securitySchemeName,
                         new SecurityScheme().name(securitySchemeName).type(SecurityScheme.Type.HTTP).scheme("bearer")

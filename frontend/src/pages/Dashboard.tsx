@@ -6,7 +6,6 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Divider,
   FormControl,
   FormLabel,
   Heading,
@@ -27,17 +26,28 @@ import {
   Tr,
   VStack,
   useToast,
-  IconButton,
   Flex,
+  Link,
+  Progress,
 } from '@chakra-ui/react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { accountApi, categoryApi, transactionApi, Transaction, TransactionRequest } from '../api/client';
+import {
+  accountApi,
+  budgetApi,
+  categoryApi,
+  transactionApi,
+  Budget,
+  Transaction,
+  TransactionRequest,
+} from '../api/client';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState({ totalIncome: 0, totalExpense: 0, netBalance: 0 });
   const [accounts, setAccounts] = useState<{ id: number; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string; type: string }[]>([]);
+  const [budgetSummaries, setBudgetSummaries] = useState<Budget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -78,6 +88,15 @@ export default function Dashboard() {
         today.toISOString().split('T')[0]
       );
       setSummary(summaryRes.data.data);
+
+      let budgets: Budget[] = [];
+      try {
+        const budRes = await budgetApi.getAll();
+        budgets = budRes.data.data;
+      } catch {
+        budgets = [];
+      }
+      setBudgetSummaries(budgets);
 
       const allCategories = catRes.data.data;
       setCategories(allCategories);
@@ -151,8 +170,16 @@ export default function Dashboard() {
   return (
     <Box minH="100vh" bg="gray.50" p={6}>
       <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg">Personal Finance</Heading>
+        <Box>
+          <Heading size="lg">Budget board</Heading>
+          <Text fontSize="sm" color="gray.600">
+            MVP: log transactions and track category budgets
+          </Text>
+        </Box>
         <HStack>
+          <Link as={RouterLink} to="/budgets" color="blue.500" mr={4}>
+            Manage budgets
+          </Link>
           <Text>Welcome, {user?.username}</Text>
           <Button colorScheme="red" size="sm" onClick={handleLogout}>
             Logout
@@ -197,10 +224,41 @@ export default function Dashboard() {
         </Card>
       </HStack>
 
+      {budgetSummaries.length > 0 && (
+        <Card mb={6}>
+          <CardHeader pb={2}>
+            <Heading size="md">Budget progress</Heading>
+            <Text fontSize="sm" color="gray.600" fontWeight="normal" mt={1}>
+              Spending vs limits for your active category budgets
+            </Text>
+          </CardHeader>
+          <CardBody pt={0}>
+            <VStack align="stretch" spacing={4}>
+              {budgetSummaries.slice(0, 8).map((b) => (
+                <Box key={b.id}>
+                  <HStack justify="space-between" mb={1}>
+                    <Text fontWeight="medium">{b.categoryName}</Text>
+                    <Text fontSize="sm" color="gray.600">
+                      ${b.spentAmount.toFixed(2)} / ${b.amount.toFixed(2)}
+                    </Text>
+                  </HStack>
+                  <Progress
+                    value={Math.min(b.percentUsed, 100)}
+                    colorScheme={b.percentUsed >= 100 ? 'red' : b.percentUsed >= 80 ? 'orange' : 'green'}
+                    size="sm"
+                    borderRadius="full"
+                  />
+                </Box>
+              ))}
+            </VStack>
+          </CardBody>
+        </Card>
+      )}
+
       <HStack align="start" spacing={6} wrap="wrap">
         <Card flex="1" minW="300px">
           <CardHeader>
-            <Heading size="md">Add Transaction</Heading>
+            <Heading size="md">Log transaction</Heading>
           </CardHeader>
           <CardBody>
             <form onSubmit={handleSubmit}>
