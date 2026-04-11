@@ -8,7 +8,6 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_VERSION: '3.9.6'
 
 jobs:
   code-quality:
@@ -22,20 +21,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-
-      - name: Set up Maven
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.MAVEN_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
 
       - name: Run Spotless Check
         run: mvn spotless:check -B
@@ -53,20 +39,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-
-      - name: Set up Maven
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.MAVEN_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
 
       - name: Run Tests
         run: mvn -B test
@@ -92,20 +65,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-
-      - name: Set up Maven
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.MAVEN_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
 
       - name: Build Package
         run: mvn -B package -DskipTests
