@@ -1,12 +1,11 @@
-FROM eclipse-temurin:17-jre AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
 COPY pom.xml .
+COPY eclipse-java-formatter.xml .
 COPY src ./src
 
-RUN apt-get update && apt-get install -y maven && \
-    mvn clean package -DskipTests && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
@@ -15,4 +14,4 @@ ENV JAVA_OPTS="-Xms256m -Xmx2048m"
 
 COPY --from=builder /app/target/*.jar app.jar
 
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /app.jar" ]
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /app/app.jar" ]
