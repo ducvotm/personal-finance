@@ -1,23 +1,23 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: budget-mvp
 
   datasource:
-    url: jdbc:mysql://localhost:3306/personal_finance?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: Admin@123
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/personal_finance?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:Admin@123}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:org.hibernate.dialect.MySQLDialect}
         format_sql: true
 
   jackson:
@@ -26,10 +26,10 @@ spring:
     default-property-inclusion: non_null
 
 jwt:
-  secret: PersonalFinanceSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong2024
-  access-expiration: 14400000
-  refresh-expiration: 604800000
-  role-default: "USER"
+  secret: ${JWT_SECRET:PersonalFinanceSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong2024}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:14400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  role-default: ${JWT_ROLE_DEFAULT:USER}
 
 management:
   endpoints:

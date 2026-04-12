@@ -64,12 +64,13 @@ export default function Login() {
             <form onSubmit={handleSubmit} style={{ width: '100%' }}>
               <VStack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email or username</FormLabel>
                   <Input
-                    type="email"
+                    type="text"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="Email or username"
                   />
                 </FormControl>
 

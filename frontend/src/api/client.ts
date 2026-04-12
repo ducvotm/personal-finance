@@ -155,8 +155,8 @@ export interface PagedResponse<T> {
 }
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    api.post<ApiResponse<AuthResponse>>('/auth/login', { email, password }),
+  login: (emailOrUsername: string, password: string) =>
+    api.post<ApiResponse<AuthResponse>>('/auth/login', { username: emailOrUsername, password }),
   
   register: (username: string, email: string, password: string) =>
     api.post<ApiResponse<AuthResponse>>('/auth/register', { username, email, password }),

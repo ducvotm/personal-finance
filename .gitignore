@@ -27,6 +27,10 @@ Thumbs.db
 build/
 out/
 
+# Frontend (see also frontend/.gitignore)
+frontend/node_modules/
+frontend/dist/
+
 # Logs
 *.log
 
