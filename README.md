@@ -54,6 +54,8 @@ mvn spring-boot:run
 
 ## Run the frontend locally
 
+`frontend/node_modules/` and `frontend/dist/` are **not** in version control (see `.gitignore`). After every clone, install dependencies before running dev or build.
+
 ```bash
 cd frontend
 npm ci
