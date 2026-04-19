@@ -2,6 +2,7 @@ package com.example.finance.controller;
 
 import com.example.finance.dto.request.TransactionRequest;
 import com.example.finance.dto.response.ApiResponse;
+import com.example.finance.dto.response.IncomeSourceSummaryResponse;
 import com.example.finance.dto.response.TransactionResponse;
 import com.example.finance.security.UserPrincipal;
 import com.example.finance.service.TransactionService;
@@ -20,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,5 +114,17 @@ public class TransactionController {
         summary.put("netBalance", totalIncome.subtract(totalExpense));
 
         return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    @Operation(summary = "Get monthly income totals by source", description = "Returns creator income totals grouped by source for a given month")
+    @GetMapping("/income-source-summary")
+    public ResponseEntity<ApiResponse<List<IncomeSourceSummaryResponse>>> getIncomeSourceSummary(
+            @AuthenticationPrincipal
+            UserPrincipal userPrincipal, @Parameter(description = "Month in yyyy-MM format") @RequestParam
+            String month) {
+        YearMonth targetMonth = YearMonth.parse(month);
+        List<IncomeSourceSummaryResponse> responses = transactionService.getIncomeSummaryBySource(userPrincipal.getId(),
+                targetMonth);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 }

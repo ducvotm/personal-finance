@@ -42,20 +42,6 @@ services:
       mysql-db:
         condition: service_healthy
 
-  frontend:
-    image: personal-finance-frontend:latest
-    container_name: personal-finance-frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: production
-    ports:
-      - "3000:80"
-    networks:
-      - finance-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
 networks:
   finance-network:
     driver: bridge

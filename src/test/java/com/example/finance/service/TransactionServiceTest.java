@@ -4,6 +4,7 @@ import com.example.finance.dto.request.TransactionRequest;
 import com.example.finance.dto.response.TransactionResponse;
 import com.example.finance.entity.Account;
 import com.example.finance.entity.Category;
+import com.example.finance.entity.IncomeSource;
 import com.example.finance.entity.Transaction;
 import com.example.finance.entity.User;
 import com.example.finance.exception.BadRequestException;
@@ -182,5 +183,32 @@ class TransactionServiceTest {
         BigDecimal totalExpense = transactionService.getTotalExpense(1L, startDate, endDate);
 
         assertEquals(new BigDecimal("2000.00"), totalExpense);
+    }
+
+    @Test
+    void createTransaction_IncomeWithoutSource_ThrowsBadRequest() {
+        TransactionRequest incomeRequest = TransactionRequest.builder().amount(new BigDecimal("100.00")).type("INCOME")
+                .transactionDate(LocalDate.now()).description("Creator payout").accountId(1L).categoryId(1L).build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(accountRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(testAccount));
+        when(categoryRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(testCategory));
+
+        assertThrows(BadRequestException.class, () -> transactionService.createTransaction(1L, incomeRequest));
+    }
+
+    @Test
+    void getIncomeSummaryBySource_Success() {
+        List<Object[]> rows = new java.util.ArrayList<>();
+        rows.add(new Object[]{IncomeSource.BRAND, new BigDecimal("1200.00")});
+        when(transactionRepository.getIncomeSummaryBySourceAndDateRange(eq(1L), any(LocalDate.class),
+                any(LocalDate.class))).thenReturn(rows);
+
+        List<com.example.finance.dto.response.IncomeSourceSummaryResponse> response = transactionService
+                .getIncomeSummaryBySource(1L, java.time.YearMonth.of(2026, 4));
+
+        assertEquals(1, response.size());
+        assertEquals(IncomeSource.BRAND, response.get(0).getSource());
+        assertEquals(new BigDecimal("1200.00"), response.get(0).getTotal());
     }
 }

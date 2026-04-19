@@ -57,4 +57,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Long accountId, @Param("startDate")
     LocalDate startDate, @Param("endDate")
     LocalDate endDate);
+
+    @Query("SELECT t.incomeSource, COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.user.id = :userId AND UPPER(t.type) = 'INCOME' " +
+            "AND t.transactionDate BETWEEN :startDate AND :endDate " + "GROUP BY t.incomeSource")
+    List<Object[]> getIncomeSummaryBySourceAndDateRange(@Param("userId")
+    Long userId, @Param("startDate")
+    LocalDate startDate, @Param("endDate")
+    LocalDate endDate);
 }

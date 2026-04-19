@@ -31,6 +31,30 @@ jwt:
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   role-default: ${JWT_ROLE_DEFAULT:USER}
 
+ai:
+  provider: ${AI_PROVIDER:ollama}
+  base-url: ${AI_BASE_URL:http://localhost:11434}
+  api-key: ${AI_API_KEY:}
+  model: ${AI_MODEL:llama3.2}
+  timeout-seconds: ${AI_TIMEOUT_SECONDS:20}
+  max-excerpt-chars: ${AI_MAX_EXCERPT_CHARS:220}
+  max-quotes-per-response: ${AI_MAX_QUOTES_PER_RESPONSE:1}
+  min-retrieval-score: ${AI_MIN_RETRIEVAL_SCORE:0.12}
+  book:
+    source-path: ${AI_BOOK_SOURCE_PATH:}
+    source-title: ${AI_BOOK_SOURCE_TITLE:The Psychology of Money}
+    top-k: ${AI_BOOK_TOP_K:3}
+    chunk-size: ${AI_BOOK_CHUNK_SIZE:800}
+    chunk-overlap: ${AI_BOOK_CHUNK_OVERLAP:120}
+    embedding-dimensions: ${AI_BOOK_EMBEDDING_DIMS:256}
+  wiki:
+    root-path: ${AI_WIKI_ROOT_PATH:knowledge}
+    raw-dir: ${AI_WIKI_RAW_DIR:raw}
+    wiki-dir: ${AI_WIKI_DIR:wiki}
+    logs-dir: ${AI_WIKI_LOGS_DIR:logs}
+    max-query-pages: ${AI_WIKI_MAX_QUERY_PAGES:5}
+    stale-after-days: ${AI_WIKI_STALE_AFTER_DAYS:30}
+
 management:
   endpoints:
     web:

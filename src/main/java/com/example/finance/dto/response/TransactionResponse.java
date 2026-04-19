@@ -1,5 +1,6 @@
 package com.example.finance.dto.response;
 
+import com.example.finance.entity.IncomeSource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,9 @@ public class TransactionResponse {
 
     @Schema(description = "Transaction type (INCOME or EXPENSE)")
     private String type;
+
+    @Schema(description = "Income source for creator income entries")
+    private IncomeSource incomeSource;
 
     @Schema(description = "Date of transaction")
     private LocalDate transactionDate;

@@ -30,6 +30,10 @@ public class Transaction {
     @Column(nullable = false)
     private String type;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "income_source")
+    private IncomeSource incomeSource;
+
     @Column(name = "transaction_date", nullable = false)
     private LocalDate transactionDate;
 

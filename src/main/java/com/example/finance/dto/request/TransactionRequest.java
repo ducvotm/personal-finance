@@ -1,5 +1,6 @@
 package com.example.finance.dto.request;
 
+import com.example.finance.entity.IncomeSource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -26,6 +27,9 @@ public class TransactionRequest {
     @Schema(description = "Transaction type (INCOME or EXPENSE)", example = "EXPENSE")
     @NotBlank(message = "Transaction type is required")
     private String type;
+
+    @Schema(description = "Income source for creator income entries", example = "BRAND")
+    private IncomeSource incomeSource;
 
     @Schema(description = "Date of transaction", example = "2024-01-15")
     @NotNull(message = "Transaction date is required")

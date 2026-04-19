@@ -1,9 +1,11 @@
 package com.example.finance.service;
 
 import com.example.finance.dto.request.TransactionRequest;
+import com.example.finance.dto.response.IncomeSourceSummaryResponse;
 import com.example.finance.dto.response.TransactionResponse;
 import com.example.finance.entity.Account;
 import com.example.finance.entity.Category;
+import com.example.finance.entity.IncomeSource;
 import com.example.finance.entity.Transaction;
 import com.example.finance.entity.User;
 import com.example.finance.exception.BadRequestException;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,14 +46,18 @@ public class TransactionService {
         Category category = categoryRepository.findByIdAndUserId(request.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
 
-        Transaction transaction = Transaction.builder().amount(request.getAmount()).type(request.getType())
+        String normalizedType = normalizeType(request.getType());
+        validateIncomeSource(normalizedType, request.getIncomeSource());
+
+        Transaction transaction = Transaction.builder().amount(request.getAmount()).type(normalizedType)
+                .incomeSource("INCOME".equals(normalizedType) ? request.getIncomeSource() : null)
                 .transactionDate(request.getTransactionDate()).description(request.getDescription())
                 .note(request.getNote())
                 .isRecurring(request.getIsRecurring() != null ? request.getIsRecurring() : false)
                 .recurringFrequency(request.getRecurringFrequency()).account(account).category(category).user(user)
                 .build();
 
-        updateAccountBalance(account, request.getAmount(), request.getType());
+        updateAccountBalance(account, request.getAmount(), normalizedType);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
@@ -87,8 +95,12 @@ public class TransactionService {
         Category category = categoryRepository.findByIdAndUserId(request.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
 
+        String normalizedType = normalizeType(request.getType());
+        validateIncomeSource(normalizedType, request.getIncomeSource());
+
         transaction.setAmount(request.getAmount());
-        transaction.setType(request.getType());
+        transaction.setType(normalizedType);
+        transaction.setIncomeSource("INCOME".equals(normalizedType) ? request.getIncomeSource() : null);
         transaction.setTransactionDate(request.getTransactionDate());
         transaction.setDescription(request.getDescription());
         transaction.setNote(request.getNote());
@@ -97,7 +109,7 @@ public class TransactionService {
         transaction.setAccount(account);
         transaction.setCategory(category);
 
-        updateAccountBalance(account, request.getAmount(), request.getType());
+        updateAccountBalance(account, request.getAmount(), normalizedType);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
@@ -125,6 +137,41 @@ public class TransactionService {
         return transactionRepository.getTotalByUserIdAndTypeAndDateRange(userId, "EXPENSE", startDate, endDate);
     }
 
+    @Transactional(readOnly = true)
+    public List<IncomeSourceSummaryResponse> getIncomeSummaryBySource(Long userId, YearMonth month) {
+        LocalDate startDate = month.atDay(1);
+        LocalDate endDate = month.atEndOfMonth();
+        List<Object[]> rows = transactionRepository.getIncomeSummaryBySourceAndDateRange(userId, startDate, endDate);
+
+        List<IncomeSourceSummaryResponse> responses = new ArrayList<>();
+        for (Object[] row : rows) {
+            IncomeSource source = (IncomeSource) row[0];
+            BigDecimal total = (BigDecimal) row[1];
+            if (source == null) {
+                continue;
+            }
+            responses.add(IncomeSourceSummaryResponse.builder().source(source).total(total).build());
+        }
+        return responses;
+    }
+
+    private String normalizeType(String type) {
+        if (type == null) {
+            throw new BadRequestException("Transaction type is required");
+        }
+        String normalized = type.trim().toUpperCase();
+        if (!"INCOME".equals(normalized) && !"EXPENSE".equals(normalized)) {
+            throw new BadRequestException("Transaction type must be INCOME or EXPENSE");
+        }
+        return normalized;
+    }
+
+    private void validateIncomeSource(String type, IncomeSource incomeSource) {
+        if ("INCOME".equals(type) && incomeSource == null) {
+            throw new BadRequestException("Income source is required for income transactions");
+        }
+    }
+
     private void updateAccountBalance(Account account, BigDecimal amount, String type) {
         if ("INCOME".equalsIgnoreCase(type)) {
             account.setBalance(account.getBalance().add(amount));
@@ -133,6 +180,8 @@ public class TransactionService {
                 throw new BadRequestException("Insufficient balance in account");
             }
             account.setBalance(account.getBalance().subtract(amount));
+        } else {
+            throw new BadRequestException("Transaction type must be INCOME or EXPENSE");
         }
         accountRepository.save(account);
     }
@@ -147,12 +196,12 @@ public class TransactionService {
 
     private TransactionResponse mapToResponse(Transaction transaction) {
         return TransactionResponse.builder().id(transaction.getId()).amount(transaction.getAmount())
-                .type(transaction.getType()).transactionDate(transaction.getTransactionDate())
-                .description(transaction.getDescription()).note(transaction.getNote())
-                .isRecurring(transaction.getIsRecurring()).recurringFrequency(transaction.getRecurringFrequency())
-                .createdAt(transaction.getCreatedAt()).updatedAt(transaction.getUpdatedAt())
-                .accountId(transaction.getAccount().getId()).accountName(transaction.getAccount().getName())
-                .categoryId(transaction.getCategory().getId()).categoryName(transaction.getCategory().getName())
-                .build();
+                .type(transaction.getType()).incomeSource(transaction.getIncomeSource())
+                .transactionDate(transaction.getTransactionDate()).description(transaction.getDescription())
+                .note(transaction.getNote()).isRecurring(transaction.getIsRecurring())
+                .recurringFrequency(transaction.getRecurringFrequency()).createdAt(transaction.getCreatedAt())
+                .updatedAt(transaction.getUpdatedAt()).accountId(transaction.getAccount().getId())
+                .accountName(transaction.getAccount().getName()).categoryId(transaction.getCategory().getId())
+                .categoryName(transaction.getCategory().getName()).build();
     }
 }
